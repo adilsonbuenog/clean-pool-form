@@ -15,7 +15,7 @@ COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY --chown=node:node server ./server
 USER node
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD-SHELL node -e "fetch('http://localhost:'+(process.env.PORT||8787)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD node -e "fetch('http://localhost:'+(process.env.PORT||8787)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 EXPOSE 8787
 CMD ["node", "server/api.mjs"]
 
