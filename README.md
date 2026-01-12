@@ -25,29 +25,65 @@ Aplicação web responsiva para registro de serviços prestados pela Clean Pool,
 Antes de usar, configure as variáveis de ambiente no arquivo `.env`:
 
 ```env
-VITE_WEBHOOK_URL=https://seu-webhook-endpoint.com/api/send
-VITE_CLEANPOOL_WHATSAPP=+5544999999999
+AVISA_API_BASE_URL=https://www.avisaapi.com.br/api
+AVISA_API_TOKEN=seu-token-aqui
+
+# Supabase (login)
+SUPABASE_URL=seu-project-url
+SUPABASE_SERVICE_ROLE_KEY=sua-service-role
+SUPABASE_USERS_TABLE=usuarios
+
+# Sessão do app
+AUTH_SESSION_SECRET=um-segredo-grande
+
+VITE_S3_PRESIGN_URL=/api/s3/presign
 ```
 
-- `VITE_WEBHOOK_URL`: URL do endpoint que receberá os dados e fará o envio para WhatsApp
-- `VITE_CLEANPOOL_WHATSAPP`: Número fixo da empresa Clean Pool no formato E.164
+- `AVISA_API_BASE_URL`: Base URL da Avisa API
+- `AVISA_API_TOKEN`: Token usado no backend para chamar a Avisa API (recomendado para não expor o token no frontend)
+- `SUPABASE_URL`: Project URL do Supabase
+- `SUPABASE_SERVICE_ROLE_KEY`: Service role key do Supabase (somente backend)
+- `SUPABASE_USERS_TABLE`: Tabela onde estão `email`, `senha`, `uuid`, `role` (padrão: `usuarios`)
+- `SUPABASE_REPORTS_TABLE`: Tabela onde ficam os relatórios enviados (padrão: `relatorios`)
+- `AUTH_SESSION_SECRET`: Segredo usado para assinar o token de sessão do login
+- `VITE_S3_PRESIGN_URL`: Endpoint do backend que gera URLs assinadas (presign) para upload
 
-## Payload do Webhook
+Obs.: o frontend chama `/api/actions/sendMessage` e `/api/actions/sendMedia` no seu backend, que faz o proxy para a Avisa API.
 
-O sistema envia um POST com o seguinte formato:
+## Painel Admin (Kanban)
+
+Usuários com role `admin` veem um painel em tempo real com os relatórios em 3 etapas: `received` → `approved` → `rejected`.
+
+### Tabela de relatórios (Supabase)
+
+Crie uma tabela (padrão: `relatorios`) com as colunas abaixo:
+
+- `id` (uuid, PK)
+- `status` (text)
+- `created_at` (timestamptz)
+- `updated_at` (timestamptz)
+- `payload` (jsonb) — contém todos os dados do envio + mídias
+
+## Payload da API (Avisa API)
+
+### Texto (`/actions/sendMessage`)
 
 ```json
 {
-  "recipients": ["+5544991122406", "+5544999999999"],
-  "message": "🧾 *Relatório de Serviço — Clean Pool*\n...",
-  "data": {
-    "servico": "Limpeza de piscina",
-    "profissional": "João Silva",
-    "telefone_cliente": "+5544991122406",
-    "observacoes": "Cliente solicitou limpeza profunda",
-    "valor_cobrado": 199.90
-  },
-  "source": "cleanpool-form"
+  "number": "5551999999999",
+  "message": "Sua mensagem aqui"
+}
+```
+
+### Mídia (`/actions/sendMedia`)
+
+```json
+{
+  "number": "5551999999999",
+  "fileUrl": "https://www.avisaapp.com.br/site/oficial/logo.png",
+  "message": "Legenda da mensagem",
+  "type": "image",
+  "fileName": "name.jpg"
 }
 ```
 
@@ -63,6 +99,7 @@ O sistema envia um POST com o seguinte formato:
 
 ```bash
 npm install
+npm run api
 npm run dev
 ```
 
@@ -72,6 +109,17 @@ npm run dev
 npm run build
 npm run preview
 ```
+
+## Docker (VPS)
+
+1. Crie `.env` baseado em `.env.example` e preencha `AVISA_API_TOKEN` e as variáveis do S3.
+2. Suba os containers:
+
+```bash
+docker compose up -d --build
+```
+
+3. Acesse `http://IP_DA_VPS/`.
 
 ## Design
 

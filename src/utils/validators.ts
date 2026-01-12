@@ -24,6 +24,41 @@ export const validatePhone = (phone: string): boolean => {
   return cleaned.length >= 10 && cleaned.length <= 13;
 };
 
+export const parseNumberValue = (value: string): number | null => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const normalized = trimmed.replace(',', '.');
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return parsed;
+};
+
+export const validateNumber = (
+  value: string,
+  options: { min?: number; max?: number } = {},
+): boolean => {
+  const parsed = parseNumberValue(value);
+  if (parsed === null) {
+    return false;
+  }
+
+  if (options.min !== undefined && parsed < options.min) {
+    return false;
+  }
+
+  if (options.max !== undefined && parsed > options.max) {
+    return false;
+  }
+
+  return true;
+};
+
 export const parseMoneyValue = (value: string): number => {
   const cleaned = value.replace(/[^\d,\.]/g, '');
   const normalized = cleaned.replace(',', '.');
