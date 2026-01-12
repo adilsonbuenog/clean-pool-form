@@ -5,7 +5,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 
-const port = Number(process.env.PORT || 8787);
+const port = Number(process.env.API_PORT || process.env.PORT || 8787);
 
 const requiredEnv = (name) => {
   const value = process.env[name];

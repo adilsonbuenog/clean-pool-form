@@ -23,3 +23,19 @@ FROM nginx:alpine AS web
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
+
+FROM node:20-alpine AS single
+WORKDIR /app
+ENV NODE_ENV=production
+ENV API_PORT=8787
+RUN apk add --no-cache nginx
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY docker/nginx.single.conf /etc/nginx/http.d/default.conf
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+COPY server ./server
+COPY docker/start-single.sh /usr/local/bin/start-single.sh
+RUN chmod +x /usr/local/bin/start-single.sh
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD node -e "fetch('http://localhost/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+EXPOSE 80
+CMD ["/usr/local/bin/start-single.sh"]
